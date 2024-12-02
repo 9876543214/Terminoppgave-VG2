@@ -72,7 +72,7 @@
                         <!-- Display media if available -->
                         {% if post.media_path %}
                             <div class="media">
-                                <img src="{{ url_for('static', filename='uploads/' + post.media_path) }}" alt="Post Media" id="posted_media">
+                                <img src="{{ url_for('serve_file', filename=post.media_path) }}" alt ="Posted media" id="posted_media">
                             </div>
                         {% endif %}
     
