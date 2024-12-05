@@ -11,7 +11,8 @@ create table users(
     user_id int not null AUTO_INCREMENT PRIMARY KEY,
     username varchar(255) not null,
     email varchar(255) not null,
-    password_hash varchar(255) not null
+    password_hash varchar(255) not null,
+    join_date varchar(255) not null
 );
 
 

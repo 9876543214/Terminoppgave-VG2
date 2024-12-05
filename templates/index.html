@@ -26,7 +26,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <ul>
-                <li><a href="#">Friends</a></li>
+                <li><a href="/register">Friends</a></li>
                 <li><a href="#">Groups</a></li>
                 <li><a href="#">Notifications</a></li>
                 <li><a href="#">Saved Posts</a></li>
@@ -59,6 +59,9 @@
                 </div>
                 <button type="submit">Post</button>
             </form>
+            {% if err == "1" %}
+                <p id="err">*Invalid file type</p>
+            {% endif %}
 
             <!--Posts-->
             <section class="main-content">

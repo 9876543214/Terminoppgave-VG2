@@ -121,3 +121,26 @@ header nav ul li a {
 #posted_media {
     max-width: 60%;
 }
+
+#err {
+    color: darkred;
+    font-weight: bold;
+}
+
+/*register.html*/
+
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+    margin: 1vw;
+}
+
+.register-form textarea{
+    width: 20%;
+    height: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    resize: none;
+}

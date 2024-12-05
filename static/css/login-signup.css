@@ -1,0 +1,14 @@
+/*login/signup side*/
+
+.material-symbols-outlined {
+    margin-left: -15vw;
+    position: absolute;
+    top: 5;
+    font-size: 3vw;
+    cursor: pointer;
+}
+
+#err {
+    color: darkred;
+    font-weight: bold;
+}

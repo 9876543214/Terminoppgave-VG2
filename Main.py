@@ -1,14 +1,17 @@
 #! C:\Program Files\Python312\python.exe
 
 import os
-from flask import Flask, request, redirect, url_for, render_template, send_from_directory
+from flask import Flask, request, redirect, url_for, render_template, send_from_directory, jsonify
 import pymysql
 from werkzeug.utils import secure_filename
 from datetime import datetime
+import bcrypt
+
 
 app = Flask(__name__)
 
 user_id = 1
+errtrue = False
 
 db_config = {
     'host': '10.2.3.235',
@@ -20,7 +23,7 @@ db_config = {
 
 # upload mappe
 UPLOAD_FOLDER = r'\\10.2.3.235\sambashare'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi'}
+ALLOWED_EXTENSIONS = {'jpeg', 'mpeg', 'mp4', 'avi', 'mov', 'gif', 'png', 'tiff', 'bmp', 'pdf', 'svg', 'webp', 'avif', 'avi'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Sjekker om fil er gyldig filtype
@@ -29,6 +32,15 @@ def allowed_file(filename):
 
 @app.route('/')
 def home():
+    global errtrue
+    err = request.args.get('err', 0)
+    if errtrue == True:
+        errtrue = False
+        return redirect(url_for('home'))
+    
+    if err != 0:
+        errtrue = True
+
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor(pymysql.cursors.DictCursor)  # vet ikke
 
@@ -55,7 +67,7 @@ def home():
         print(f"Error reading shared folder: {e}")
         files = []
 
-    return render_template('index.html', posts=posts, files=files)
+    return render_template('index.html', posts=posts, files=files, err=err)
 
 
 @app.route('/media/<filename>')
@@ -93,6 +105,10 @@ def submit_post():
             
             media_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             media_path = filename  # Save path for database
+        else:
+            print("invalid file type")
+            return redirect(url_for('home', err=1))
+            
 
     # sett inn i databasen
     try:
@@ -110,7 +126,75 @@ def submit_post():
         conn.close()
 
     # Redirect to the homepage or another page after submission
-    return redirect(url_for('home'))
+    return redirect(url_for('home', err=0))
+
+
+@app.route('/register')
+def registerpage():
+    return render_template('register.html')
+
+@app.route('/process-register', methods=['POST'])
+def process_register():
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor()
+    username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    joindate = datetime.now()
+    password_bytes = password.encode('utf-8')
+
+
+    salt = bcrypt.gensalt()
+
+    hashed_password = bcrypt.hashpw(password_bytes, salt)
+
+    try:
+        sql = """
+            INSERT INTO users (username, email, password_hash, join_date)
+            VALUES (%s, %s, %s, %s)
+            """
+        cursor.execute(sql, (username, email, hashed_password, joindate))
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {e}")
+        conn.rollback()
+        return redirect(url_for('registerpage', err = {e}))
+    finally:
+        cursor.close()
+        conn.close()
+    return redirect(url_for('register_success'))
+    
+
+@app.route('/register_success')
+def register_success():
+    return render_template('register_success.html')
+
+
+
+
+@app.route('/validate_email')
+def validate_email():
+    email = request.args.get('email')
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor()
+
+    sql = """
+    SELECT email FROM users WHERE email = %s
+    """
+    cursor.execute(sql, (email,))
+    result = cursor.fetchone()
+
+    conn.close()
+
+    if result:
+        return jsonify({"exists": True, "email": result[0]})
+    else:
+        return jsonify({"exists": False})
+
+
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
 
 
 if __name__ == '__main__':
