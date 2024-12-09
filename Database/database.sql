@@ -7,15 +7,14 @@ exit;
 
 use sosial_media
 
-create table users(
+CREATE TABLE users(
     user_id int not null AUTO_INCREMENT PRIMARY KEY,
     username varchar(255) not null,
     email varchar(255) not null,
     password_hash varchar(255) not null,
+    salt varchar(255) not null,
     join_date varchar(255) not null
 );
-
-
 
 CREATE TABLE posts (
     post_id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -29,4 +28,11 @@ CREATE TABLE posts (
     comment_count INT DEFAULT 0,
     is_deleted BOOLEAN DEFAULT FALSE,
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE likes (
+    user_id int not null,
+    post_id bigint not null,
+    CONSTRAINT fk_userlikes FOREIGN KEY (user_id) REFERENCES users(user_id),
+    CONSTRAINT fk_postlikes FOREIGN KEY (post_id) REFERENCES posts(post_id)
 );

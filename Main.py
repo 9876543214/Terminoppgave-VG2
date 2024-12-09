@@ -1,7 +1,7 @@
 #! C:\Program Files\Python312\python.exe
 
 import os
-from flask import Flask, request, redirect, url_for, render_template, send_from_directory, jsonify
+from flask import Flask, request, redirect, url_for, render_template, send_from_directory, jsonify, session
 import pymysql
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -10,8 +10,11 @@ import bcrypt
 
 app = Flask(__name__)
 
-user_id = 1
-errtrue = False
+app.secret_key = 'your secret key'
+
+displayerr = False
+preverr_home = None
+preverr_login = None
 
 db_config = {
     'host': '10.2.3.235',
@@ -32,17 +35,20 @@ def allowed_file(filename):
 
 @app.route('/')
 def home():
-    global errtrue
+    global displayerr
+    global preverr_home
     err = request.args.get('err', 0)
-    if errtrue == True:
-        errtrue = False
-        return redirect(url_for('home'))
     
-    if err != 0:
-        errtrue = True
+    if displayerr == False:
+        if preverr_home == err:
+            preverr_home = None
+            return redirect(url_for('home'))
+            
+    preverr_home = err
+    displayerr = False
 
     conn = pymysql.connect(**db_config)
-    cursor = conn.cursor(pymysql.cursors.DictCursor)  # vet ikke
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     # Velger tilfeldig posts
     try:
@@ -79,14 +85,18 @@ def serve_file(filename):
         return "File not found", 404
 
 
-
-
-
 @app.route('/submit-post', methods=['POST'])
 def submit_post():
+    global displayerr
     # database
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
+    if session['user_id'] == None:
+        displayerr = True
+        return redirect(url_for('home', err=2))
+    else:
+        user_id = session['user_id']
+
 
     # Henter html form
     content = request.form.get('content')
@@ -107,6 +117,7 @@ def submit_post():
             media_path = filename  # Save path for database
         else:
             print("invalid file type")
+            displayerr = True
             return redirect(url_for('home', err=1))
             
 
@@ -147,13 +158,14 @@ def process_register():
     salt = bcrypt.gensalt()
 
     hashed_password = bcrypt.hashpw(password_bytes, salt)
+    
 
     try:
         sql = """
-            INSERT INTO users (username, email, password_hash, join_date)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO users (username, email, password_hash, join_date, salt)
+            VALUES (%s, %s, %s, %s, %s)
             """
-        cursor.execute(sql, (username, email, hashed_password, joindate))
+        cursor.execute(sql, (username, email, hashed_password, joindate, salt))
         conn.commit()
     except Exception as e:
         print(f"Error: {e}")
@@ -194,7 +206,57 @@ def validate_email():
 
 @app.route('/login')
 def login_page():
-    return render_template('login.html')
+    global displayerr
+    err = request.args.get('err', 0)
+    
+    if displayerr == True:
+        return redirect(url_for('login_page'))
+    
+    displayerr = False
+
+    return render_template('login.html', err=err)
+
+@app.route('/login_process', methods=['POST'])
+def login_process():
+    global displayerr
+    email_or_username = request.form.get('email')
+    password = request.form.get('password')
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor()
+
+    password_bytes = password.encode('utf-8')
+
+    sql = """
+    SELECT email, username, user_id, salt, password_hash, join_date FROM users WHERE email = %s
+    """
+    cursor.execute(sql, (email_or_username,))
+    result = cursor.fetchone()
+    if result == None:
+        sql = """
+        SELECT email, username, user_id, salt, password_hash, join_date FROM users WHERE username = %s
+        """
+        cursor.execute(sql, (email_or_username,))
+        result = cursor.fetchone()
+
+    if result == None:
+        return redirect(url_for('login_page', err=1))
+    
+    salt = result[3]
+    salt_bytes = salt.encode('utf-8')
+    hashed_password = bcrypt.hashpw(password_bytes, salt_bytes)
+    decoded_hash = hashed_password.decode('utf-8')
+
+
+    if decoded_hash != result[4]:
+        displayerr = True
+        return redirect(url_for('login_page', err=2))
+    else:
+        session['user_id'] = result[2]
+        session['username'] = result[1]
+        session['join_date'] = result[5]
+
+
+    return redirect(url_for('home'))
 
 
 if __name__ == '__main__':

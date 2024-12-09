@@ -123,8 +123,11 @@ header nav ul li a {
 }
 
 #err {
-    color: darkred;
-    font-weight: bold;
+    color: red;
+}
+
+#err a{
+    border-bottom: red;
 }
 
 /*register.html*/

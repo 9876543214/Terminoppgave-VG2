@@ -19,11 +19,11 @@ validation
                 // Use a cached value or mark as invalid if not checked yet
                 if (emailValidationCache[value] === undefined) {
                     // Perform async check in the background
-                    fetch("http://10.2.3.64:5000/validate_email?email=" + encodeURIComponent(value))
+                    fetch("http://10.2.3.196:5000/validate_email?email=" + encodeURIComponent(value))
                         .then((response) => response.json())
                         .then((json) => {
                             emailValidationCache[value] = !json.exists; // Cache result
-                        })
+                            console.log(emailValidationCache)                        })
                         .catch(() => {
                             emailValidationCache[value] = false; // Assume invalid on error
                         });

@@ -59,6 +59,9 @@
                 </div>
                 <button type="submit">Post</button>
             </form>
+            {% if err == "2" %}
+                <p id="err">*You must <a href="/login">logg inn</a> to post.</p>
+            {% endif %}
             {% if err == "1" %}
                 <p id="err">*Invalid file type</p>
             {% endif %}

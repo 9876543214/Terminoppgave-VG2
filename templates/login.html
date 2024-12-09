@@ -11,22 +11,48 @@
 <body>
 
 
-    <span class="material-symbols-outlined" onclick="window.location='../index.php'">
+    <span class="material-symbols-outlined" onclick="window.location='/'">
     arrow_back
     </span>
     
     <h1>Login</h1>
 
-    <form method="post">
-        <label for="email">Email</label>
+    <form action="/login_process"  method="post" id="login">
+        <label for="email">Email or username</label>
         <input type="email" name="email" id="email">
+        {% if err == "1" %}
+        <p id="err">*Incorrect email or username</p>
+        {% endif %}
         <label for="password">Password</label>
+        
         <input type="password" name="password" id="password">
+        {% if err == "2" %}
+        <p id="err">*Incorrect password</p>
+        {% endif %}
 
         <button>Log in</button>
     </form>
 
     <p>Don't have an account? <a href="/register">Sign up here</a>.</p>
+
+    <script>
+        const validation = new JustValidate("#login");
+
+        validation
+            .addField("#email", [
+            {
+                rule: "required"
+            }
+            ])
+            .addField("#password", [
+            {
+                rule: "required"
+            },
+            {
+                rule: "password"
+            }
+        ])
+    </script>
 
 </body>
 </html>
