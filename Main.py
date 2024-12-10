@@ -1,4 +1,5 @@
 #! C:\Program Files\Python312\python.exe
+#Credits: Julian Magnussen Lund
 
 import os
 from flask import Flask, request, redirect, url_for, render_template, send_from_directory, jsonify, session

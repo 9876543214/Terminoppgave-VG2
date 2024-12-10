@@ -14,9 +14,13 @@
         <nav>
             <ul>
                 <li><a href="#">Home</a></li>
+                {% if session.user_id != none %}
                 <li><a href="#">Profile</a></li>
                 <li><a href="#">Messages</a></li>
-                <li><a href="#">Settings</a></li>
+                <li><a href="/signout">Signout</a></li>
+                {% else %}
+                <li><a href="/login">Log in</a><p> or </p><a href="/signup">sign up</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
