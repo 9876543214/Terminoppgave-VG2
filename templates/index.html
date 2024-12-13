@@ -124,14 +124,19 @@
                                 </div>
                                 <div class="comments">
                                     <span>
-                                        <img src="{{ url_for('static', filename='img/chat_20dp_000000_FILL0_wght400_GRAD0_opsz20.svg')}}" alt="comment icon" onclick="opencomments(post.post_id)">
+                                        <form>
+                                            <a href="#" id="comment_button", class="{{post.post_id}}"><img src="{{ url_for('static', filename='img/chat_20dp_000000_FILL0_wght400_GRAD0_opsz20.svg')}}" alt="comment icon"></a>
+                                        </form>
                                     </span>
-
+                                    {% if post.comment_amount %}
+                                        <p id="comment_amount_{{post.post_id}}">{{post.comment_amount}} </p>
+                                    {% else %}
+                                        <P id="comment_amount_{{post.post_id}}">0</P>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
-                        <div class="comment-section">
-
+                        <div class="comment_section">
                         </div>
                     </div>
 

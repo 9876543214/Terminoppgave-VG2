@@ -29,7 +29,7 @@ db_config = {
 
 # upload mappe
 UPLOAD_FOLDER = r'\\10.2.3.235\sambashare'
-ALLOWED_EXTENSIONS = {'jpeg', 'jpg', 'mpeg', 'mp4', 'avi', 'mov', 'webm', 'gif', 'png', 'tiff', 'bmp', 'pdf', 'svg', 'webp', 'avif', 'avi'}
+ALLOWED_EXTENSIONS = {'jpeg', 'jpg', 'mpeg', 'mp4', 'mov', 'webm', 'gif', 'png', 'tiff', 'bmp', 'pdf', 'svg', 'webp', 'avif', 'avi'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Sjekker om fil er gyldig filtype
@@ -416,7 +416,27 @@ def addlike():
             cursor.execute(sql3, (user_id, post_id))
             conn.commit()
             return ("Unliked")
+        
+@app.route('/opencomments')
+def opencomments():
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    post_id = request.args.get('post_id')
+    sql = """
+        SELECT * FROM comments WHERE post_id = %s
+    """
+    cursor.execute(sql, (post_id))
+    comments = cursor.fetchall()
+    for comment in comments:
+        user_id = comment['user_id']
+        sql = """
+            SELECT username FROM users WHERE user_id = %s
+        """
+        cursor.execute(sql, (user_id))
+        username = cursor.fetchone()
+        comment['username'] = username['username'] if username else "Unknown user"
 
+    return jsonify(comments)
 
 if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):
