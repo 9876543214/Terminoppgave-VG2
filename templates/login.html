@@ -19,7 +19,7 @@
 
     <form action="/login_process"  method="post" id="login">
         <label for="email">Email or username</label>
-        <input type="email" name="email" id="email">
+        <input type="text" name="email" id="email">
         {% if err == "1" %}
         <p id="err">*Incorrect email or username</p>
         {% endif %}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Social Media App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">SocialApp</div>
+        <nav>
+            <ul>
+                
+                {% if session.user_id %}
+                <li><a href="/">Home</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="#">Messages</a></li>
+                <li><a href="/signout">Signout</a></li>
+                {% else %}
+                <p><a href="/login" style="color: white;">Log in</a> or <a href="/register" style="color: white;">sign up</a></p>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul>
+                <li><a href="#">Friends</a></li>
+                <li><a href="#">Groups</a></li>
+                <li><a href="#">Notifications</a></li>
+                <li><a href="#">Saved Posts</a></li>
+                <li><a href="/my-posts">My posts</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <section class="main-content">
+            <!--Posts-->
+            <section class="main-content">
+                <h2>My posts</h2>
+                {% for post in posts %}
+                <div class="post">
+                    <h3>{{ post['username'] }}</h3>
+                    <p>{{ post.content }}</p>
+                    <p></p>
+
+                    <!-- Display media if available -->
+                    {% if post.media_path %}
+                        <div class="media">
+                            {% if post.filetype == 'Image' or post.filetype == 'GIF' %}
+                                <img src="{{ url_for('serve_file', filename=post.media_path) }}" alt="Posted media" id="posted_media">
+                            {% elif post.filetype == 'Video' %}
+                                <video controls id="posted_media">
+                                    <source src="{{ url_for('serve_file', filename=post.media_path) }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            {% else %}
+                            <p>No media file</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="bottom">
+                        <p>Posted on: {{ post.date }}</p>                    
+                        <div class="comment_likebutton">
+                            <div class="likes">
+                                {% if post.userliked == None %}
+                                <span>
+                                    <form>
+                                        <a href="#" id="like_button" class="{{post.post_id}}"><img src="{{ url_for('static', filename='img/favorite_20dp_000000_FILL0_wght400_GRAD0_opsz20.svg')}}" alt="like icon" id="like_{{ post.post_id}}"></a>
+                                    </form>
+                                </span>
+                                {% else %}
+                                <span>
+                                    <form>
+                                        <a href="#" id="like_button" class="{{post.post_id}}"><img src="{{ url_for('static', filename='img/favorite_20dp_EA3323_FILL1_wght400_GRAD0_opsz20.svg')}}" alt="like icon" id="like_{{ post.post_id}}"></a>
+                                    </form>
+                                </span>
+                                {% endif %}
+                                {% if post.likes %}
+                                    <p id="like_amount_{{post.post_id}}">{{post.likes}} </p>
+                                {% else %}
+                                    <P id="like_amount_{{post.post_id}}">0</P>
+                                {% endif %}
+                            </div>
+                            <div class="comments">
+                                <span>
+                                    <img src="{{ url_for('static', filename='img/chat_20dp_000000_FILL0_wght400_GRAD0_opsz20.svg')}}" alt="comment icon" onclick="opencomments(post.post_id)">
+                                </span>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comment-section">
+                    </div>
+                </div>
+                {% else %}
+                    <p>No posts available at the moment.</p>
+                {% endfor %}
+            </section>
+        </section>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

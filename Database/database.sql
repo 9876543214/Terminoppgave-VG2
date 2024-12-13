@@ -36,3 +36,12 @@ CREATE TABLE likes (
     CONSTRAINT fk_userlikes FOREIGN KEY (user_id) REFERENCES users(user_id),
     CONSTRAINT fk_postlikes FOREIGN KEY (post_id) REFERENCES posts(post_id)
 );
+
+CREATE TABLE comments (
+    comment_id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    post_id BIGINT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT,
+    CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(user_id),
+    CONSTRAINT fk_post_id FOREIGN KEY (post_id) REFERENCES posts(post_id)
+);
