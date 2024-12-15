@@ -20,7 +20,7 @@ preverr_home = None
 preverr_login = None
 
 db_config = {
-    'host': '10.2.3.235',
+    'host': '192.168.10.134',
     'user': 'sosial',
     'password': 'sosial123',
     'db': 'sosial_media'
@@ -28,7 +28,7 @@ db_config = {
 
 
 # upload mappe
-UPLOAD_FOLDER = r'\\10.2.3.235\sambashare'
+UPLOAD_FOLDER = r'\\192.168.10.134\sambashare'
 ALLOWED_EXTENSIONS = {'jpeg', 'jpg', 'mpeg', 'mp4', 'mov', 'webm', 'gif', 'png', 'tiff', 'bmp', 'pdf', 'svg', 'webp', 'avif', 'avi'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -437,6 +437,24 @@ def opencomments():
         comment['username'] = username['username'] if username else "Unknown user"
 
     return jsonify(comments)
+
+@app.route('/submit_comment', methods=['POST'])
+def submit_comment():
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    comment_content = request.form.get('content')
+    post_id = request.form.get('post_id')
+    if 'user_id' in session or session['user_id'] is not None:
+        user_id = session['user_id']
+        sql = """
+            INSERT INTO comments (post_id, user_id, content) VALUES (%s, %s, %s)
+        """
+        cursor.execute(sql, (post_id, user_id, comment_content))
+        conn.commit()
+        return redirect(url_for('home'))
+
+
+
 
 if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):

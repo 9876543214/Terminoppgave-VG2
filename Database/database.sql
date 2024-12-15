@@ -1,9 +1,12 @@
 Create database sosial_media;
 create user 'sosial'@'%' identified by 'sosial123';
-grant all privileges on 'sosial_media'.* to 'sosial'@'%';
+grant all privileges on `sosial_media`.* to 'sosial'@'%';
+FLUSH PRIVILEGES;
 exit;
 
 -- logg inn med den nye brukeren
+-- "mariadb -u sosial -p"
+-- "sosial123"
 
 use sosial_media
 
