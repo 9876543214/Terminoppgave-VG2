@@ -33,15 +33,12 @@ $(function() {
 $(function() {
     $('a#comment_button').on('click', async function(e) {
         e.preventDefault()
-        let comment_section = document.getElementById("comment_section")
         let post_id = this.className
-        let comment_id = "comment_" + post_id
-        var comment_count = document.getElementById('like_amount_' + post_id)
-        var comment_count_int = Number(comment_count.textContent)
+        let comment_section = document.getElementById("comment_section_" + post_id)
         console.log("1")
         try {
             let comments = await $.getJSON('/opencomments?post_id=' + post_id)
-            let comment_section = document.getElementById('comment_section')
+
 
             console.log(comments)
 
@@ -57,8 +54,7 @@ $(function() {
                         </div>
                         <div id="line"></div>` 
             });
-            } else {
-                console.log("comment_" + comments[0].post_id)                
+            } else {               
                 if (comments[0] != null) {
                     comments.forEach(comment => {
                         let comments2 = document.getElementById("comment_" + comments[0].post_id)
@@ -79,3 +75,45 @@ $(function() {
                 
     })
 })
+
+function addcomment(post_id) {
+    var comment_count = document.getElementById("comment_amount_" + post_id)
+    try {
+        var comment_count_int = Number(comment_count.textContent)
+    } catch {
+        var comment_count_int = 0
+    }
+    
+    comment_count_int = comment_count_int + 1
+    var comment_count_str = comment_count_int.toString()
+    console.log(comment_count_str)
+    comment_count.textContent = comment_count_str
+}
+
+
+document.getElementById('commentform').addEventListener('submit', function(event) {
+    console.log('Submit event triggered'); // Log when the event is triggered
+    event.preventDefault(); // Stop the form from reloading the page
+
+    const formData = new FormData(this); // Gather form data
+
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response Data:', data); // Log the server response
+        alert('Your comment has been added!');
+    })
+    .catch(error => {
+        console.error('Fetch Error:', error);
+        alert('There was a problem submitting your comment.');
+    });
+});
+

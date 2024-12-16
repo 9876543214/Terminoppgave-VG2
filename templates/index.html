@@ -17,7 +17,7 @@
             <ul>
                 
                 {% if session.user_id %}
-                <li><a href="/">Home</a></li>
+                <li><a href="/?posts=1&newpage=1">Home</a></li>
                 <li><a href="#">Profile</a></li>
                 <li><a href="#">Messages</a></li>
                 <li><a href="/signout">Signout</a></li>
@@ -36,27 +36,25 @@
                 <li><a href="#">Friends</a></li>
                 <li><a href="#">Groups</a></li>
                 <li><a href="#">Notifications</a></li>
-                <li><a href="#">Saved Posts</a></li>
-                <li><a href="/my-posts">My posts</a></li>
+                {% if loggedin == "1" %}                
+                <li><a href="/?posts=3&newpage=1">Liked posts</a></li>
+                <li><a href="/?posts=2&newpage=1">My posts</a></li>
+                {% endif %}
             </ul>
         </aside>
 
         <!-- Main Content -->
         <section class="main-content">
-            <!-- Create a new post -->
+            {% if page == "1" %}
             <form action="submit-post" method="post" enctype="multipart/form-data" class="new-post">
                 <!-- Text content input -->
                 <div class="form-group">
                     <textarea placeholder="What's on your mind?" rows="3" id="postContent" name="content"></textarea>
                 </div>
-        
-                <!-- Media upload input -->
                 <div class="form-group">
                     <label for="media">Upload Media (image or video):</label>
                     <input type="file" id="media" name="media" accept="image/*,video/*">
                 </div>
-        
-                <!-- Privacy setting input -->
                 <div class="form-group">
                     <label for="visibility">Who can see this post?</label>
                     <select id="visibility" name="visibility">
@@ -67,6 +65,7 @@
                 </div>
                 <button type="submit">Post</button>
             </form>
+            {% endif %}
             {% if err == "2" %}
                 <p id="err">*You must <a href="/login" id="err">log inn</a> to post.</p>
             {% endif %}
@@ -76,14 +75,19 @@
 
             <!--Posts-->
             <section class="main-content">
-                <h2>Random Posts</h2>
+                {% if page == "1" %}
+                <h2>Posts</h2>
+                {% elif page == "2" %}
+                <h2>My Posts</h2>
+                {% elif page == "3" %}
+                <h2>Liked Posts</h2>
+                {% endif %}
                 {% for post in posts %}
                     <div class="post">
                         <h3>{{ post['username'] }}</h3>
                         <p>{{ post.content }}</p>
                         <p></p>
     
-                        <!-- Display media if available -->
                         {% if post.media_path %}
                             <div class="media">
                                 {% if post.filetype == 'Image' or post.filetype == 'GIF' %}
@@ -128,19 +132,20 @@
                                             <a href="#" id="comment_button", class="{{post.post_id}}"><img src="{{ url_for('static', filename='img/chat_20dp_000000_FILL0_wght400_GRAD0_opsz20.svg')}}" alt="comment icon"></a>
                                         </form>
                                     </span>
-                                    {% if post.comment_amount %}
-                                        <p id="comment_amount_{{post.post_id}}">{{post.comment_amount}} </p>
+                                    {% if post.comments %}
+                                        <p id="comment_amount_{{post.post_id}}">{{post.comments}} </p>
                                     {% else %}
                                         <P id="comment_amount_{{post.post_id}}">0</P>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
-                        <div class="comment_section" id="comment_section">
-                            <form action="submit_comment" method="post" enctype="multipart/form-data" class="new-comment">
+                        <div class="comment_section" id="comment_section_{{post.post_id}}">
+                            <div class="line"></div>
+                            <form id="commentform" action="submit_comment" method="post" enctype="multipart/form-data" class="new-comment">
                                 <textarea placeholder="" rows="3" id="commentContent" name="content"></textarea>
                                 <input type="hidden" name="post_id" value="{{post.post_id}}">
-                                <button type="submit">Comment</button>
+                                <button type="submit" class="{{post.post_id}}" onclick="addcomment(`{{post.post_id}}`)">Comment</button>
                             </form>
                         </div>
                     </div>

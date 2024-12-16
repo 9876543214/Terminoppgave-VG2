@@ -41,81 +41,24 @@ def home():
     global displayerr
     global preverr_home
     err = request.args.get('err', 0)
+    page = request.args.get('posts', "1")
+    newpage = request.args.get('newpage', "0")
     
     if displayerr == False:
         if preverr_home == err:
             preverr_home = None
-            return redirect(url_for('home'))
+            if str(newpage) == "0":
+                return redirect(url_for('home'))
             
     preverr_home = err
     displayerr = False
 
-    conn = pymysql.connect(**db_config)
-    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    posts = fetch_posts(page)
 
-    # Velger tilfeldig posts
-    try:
-        sql = """
-            SELECT post_id, user_id, content, media_path, created_at, visibility, like_count, comment_count
-            FROM posts
-            WHERE is_deleted = FALSE
-            ORDER BY created_at DESC LIMIT 100
-        """
-        cursor.execute(sql)
-        posts = cursor.fetchall() 
-        for post in posts:
-            user_id = post['user_id']
-            sql = """
-                SELECT username 
-                FROM users
-                WHERE user_id = %s
-            """
-            cursor.execute(sql, (user_id,))
-            user = cursor.fetchone()            
-            post_id = post['post_id']
-            user_id2 = session['user_id']
-            if 'user_id' in session or session['user_id'] is not None:
-                sql = """
-                    SELECT * FROM likes WHERE post_id = %s AND user_id = %s
-                """
-                cursor.execute(sql, (post_id, user_id2,))
-                userliked = cursor.fetchone()
-                post['userliked'] = userliked
-            else:
-                post['userliked'] = None
-            sql = """
-                SELECT * FROM likes WHERE post_id = %s
-            """
-
-
-            cursor.execute(sql, (post_id,))
-            likes = cursor.fetchall()
-            post['likes'] = len(likes)
-
-            username = user['username']
-            post['username'] = username
-            date = post['created_at'].strftime("%b %d")
-            post['date'] = date
-            if post['media_path'] != None:
-                mime_type, _ = mimetypes.guess_type(post['media_path'])
-                if mime_type:
-                    if mime_type.startswith('image/'):
-                        if mime_type == 'image/gif':
-                            filetype = 'GIF'
-                        else:
-                            filetype = 'Image'
-                    elif mime_type.startswith('video/'):
-                        filetype = 'Video'
-                post['filetype'] = filetype
-
-
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        posts = []
-    finally:
-        cursor.close()
-        conn.close()
+    if 'user_id' in session and session['user_id'] is not None:
+        loggedin = "1"
+    else: 
+        loggedin = "2"
 
     try:
         files = os.listdir(UPLOAD_FOLDER)
@@ -123,7 +66,7 @@ def home():
         print(f"Error reading shared folder: {e}")
         files = []
 
-    return render_template('index.html', posts=posts, files=files, err=err)
+    return render_template('index.html', posts=posts, files=files, err=err, loggedin=loggedin, page=page)
 
 
 @app.route('/media/<filename>')
@@ -145,7 +88,7 @@ def submit_post():
     cursor = conn.cursor()
     if 'user_id' not in session or session['user_id'] is None:
         displayerr = True
-        return redirect(url_for('home', err=2))
+        return redirect(url_for('home', err=2, posts=1))
     else:
         user_id = session['user_id']
 
@@ -171,7 +114,7 @@ def submit_post():
                 media_path = filename  # Save path for database
             else:
                 displayerr = True
-                return redirect(url_for('home', err=1))
+                return redirect(url_for('home', err=1, posts=1))
             
 
     # sett inn i databasen
@@ -190,7 +133,7 @@ def submit_post():
         conn.close()
 
     # Redirect to the homepage or another page after submission
-    return redirect(url_for('home', err=0))
+    return redirect(url_for('home', err=0, posts=1))
 
 
 @app.route('/register')
@@ -318,72 +261,7 @@ def signout():
     session.pop('join_date', None)
     return redirect(url_for('home'))
 
-@app.route('/my-posts')
-def myposts():
-    conn = pymysql.connect(**db_config)
-    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-    # Henter posts
-    try:
-        sql = """
-            SELECT post_id, user_id, content, media_path, created_at, visibility, like_count, comment_count
-            FROM posts
-            WHERE user_id = %s
-            ORDER BY created_at DESC LIMIT 100
-        """
-        cursor.execute(sql, session['user_id'])
-        posts = cursor.fetchall() 
-        for post in posts:
-            user_id = post['user_id']
-            sql = """ 
-                SELECT username 
-                FROM users
-                WHERE user_id = %s
-            """ #henter username til den som postet
-            cursor.execute(sql, (user_id,))
-            user = cursor.fetchone()
-            username = user['username']
-            post['username'] = username
-            date = post['created_at'].strftime("%b %d")
-            post['date'] = date
-            if post['media_path'] != None:
-                mime_type, _ = mimetypes.guess_type(post['media_path'])
-                if mime_type:
-                    if mime_type.startswith('image/'):
-                        if mime_type == 'image/gif':
-                            filetype = 'GIF'
-                        else:
-                            filetype = 'Image'
-                    elif mime_type.startswith('video/'):
-                        filetype = 'Video'
-                post['filetype'] = filetype
-                post_id = post['post_id']
-                if 'user_id' in session or session['user_id'] is not None:
-                    user_id2 = session['user_id']
-                    sql = """
-                        SELECT * FROM likes WHERE post_id = %s AND user_id = %s
-                    """
-                    cursor.execute(sql, (post_id, user_id2,))
-                    userliked = cursor.fetchone()
-                    post['userliked'] = userliked
-                else:
-                    post['userliked'] = None
-                sql = """
-                    SELECT * FROM likes WHERE post_id = %s
-                """
-                cursor.execute(sql, (post_id,))
-                likes = cursor.fetchall()
-                post['likes'] = len(likes)
-
-
-    except Exception as e:
-        print(f"Error: {e}")
-        posts = []
-    finally:
-        cursor.close()
-        conn.close()
-
-    return render_template('myposts.html', posts=posts)
 
 @app.route('/addlike')
 def addlike():
@@ -451,12 +329,105 @@ def submit_comment():
         """
         cursor.execute(sql, (post_id, user_id, comment_content))
         conn.commit()
-        return redirect(url_for('home'))
+        print("test")
+        conn.close
+        return jsonify("commented")
 
 
 
+
+def fetch_posts(selected_posts):
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+
+    # Velger posts 
+    try:
+        if str(selected_posts) == "1":
+            value = 'WHERE is_deleted = FALSE'
+        elif str(selected_posts) == "2":
+            if 'user_id' in session or session['user_id'] is not None:
+                value = "WHERE user_id = " + str(session['user_id'])
+        elif str(selected_posts) == "3":
+            sql = """
+                SELECT post_id FROM likes WHERE user_id = %s
+            """
+            if 'user_id' in session or session['user_id'] is not None:
+                cursor.execute(sql, (session['user_id']))
+            liked_posts = cursor.fetchall()
+            liked_posts = [row['post_id'] for row in liked_posts]
+            print(liked_posts)
+            value = 'WHERE post_id IN ({})'.format(', '.join(map(str, liked_posts)))
+            print(value)
+
+        sql = """
+            SELECT post_id, user_id, content, media_path, created_at, visibility, like_count, comment_count
+            FROM posts
+            {value} ORDER BY created_at DESC LIMIT 100
+        """.format(value=value)
+        cursor.execute(sql,)
+        posts = cursor.fetchall() 
+        for post in posts:
+            user_id = post['user_id']
+            sql = """
+                SELECT username 
+                FROM users
+                WHERE user_id = %s
+            """
+            cursor.execute(sql, (user_id,))
+            user = cursor.fetchone()            
+            post_id = post['post_id']
+            
+            if 'user_id' in session:
+                if session['user_id'] is not None:
+                    user_id2 = session['user_id']
+                    sql = """
+                        SELECT * FROM likes WHERE post_id = %s AND user_id = %s
+                    """
+                    cursor.execute(sql, (post_id, user_id2,))
+                    userliked = cursor.fetchone()
+                    post['userliked'] = userliked
+            else:
+                post['userliked'] = None
+            sql = """
+                SELECT * FROM likes WHERE post_id = %s
+            """
+            cursor.execute(sql, (post_id,))
+            likes = cursor.fetchall()
+            post['likes'] = len(likes)
+            sql = """
+                SELECT post_id FROM comments WHERE post_id = %s
+            """
+            cursor.execute(sql, (post_id,))
+
+            username = user['username']
+            comments = cursor.fetchall()
+            post['comments'] = len(comments)
+            post['username'] = username
+            date = post['created_at'].strftime("%b %d")
+            post['date'] = date
+            if post['media_path'] != None:
+                mime_type, _ = mimetypes.guess_type(post['media_path'])
+                if mime_type:
+                    if mime_type.startswith('image/'):
+                        if mime_type == 'image/gif':
+                            filetype = 'GIF'
+                        else:
+                            filetype = 'Image'
+                    elif mime_type.startswith('video/'):
+                        filetype = 'Video'
+                post['filetype'] = filetype
+
+
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        posts = []
+    finally:
+        cursor.close()
+        conn.close()
+
+    return posts
 
 if __name__ == '__main__':
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)  
     app.run(debug=True, host="0.0.0.0", port=5000)
