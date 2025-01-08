@@ -19,7 +19,7 @@
     
     <h1>Signup</h1>
 
-    <form action="/process-register" method="post" id="register" novalidate>
+    <form action="/process-register" method="post" id="register" novalidate> <!-- Form for registrering -->
         <div>
             <label for="username">Username</label>
             <input type="text" id="name" name="username">
@@ -44,7 +44,7 @@
 
     </form>        
     {% if err %}
-        <p id="err">*{{err}}</p>
+        <p id="err">*{{err}}</p> <!-- Viser error -->
     {% endif %}
     <p>Already have an account? <a href="/login">Log in here</a>.</p>
 </body>

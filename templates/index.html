@@ -6,7 +6,6 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Social Media App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
 </head>
 <body>
@@ -16,7 +15,7 @@
         <nav>
             <ul>
                 
-                {% if session.user_id %}
+                {% if session.user_id %} <!-- Styrer nav basert på om bruker er logget inn eller ikke-->
                 <li><a href="/?posts=1&newpage=1">Home</a></li>
                 <li><a href="#">Profile</a></li>
                 <li><a href="#">Messages</a></li>
@@ -66,7 +65,7 @@
                 <button type="submit">Post</button>
             </form>
             {% endif %}
-            {% if err == "2" %}
+            {% if err == "2" %} <!-- Viser errors-->
                 <p id="err">*You must <a href="/login" id="err">log inn</a> to post.</p>
             {% endif %}
             {% if err == "1" %}
@@ -133,7 +132,7 @@
                                         </form>
                                     </span>
                                     {% if post.comments %}
-                                        <p id="comment_amount_{{post.post_id}}">{{post.comments}} </p>
+                                        <p id="comment_amount_{{post.post_id}}">{{post.comments}}</p>
                                     {% else %}
                                         <P id="comment_amount_{{post.post_id}}">0</P>
                                     {% endif %}
@@ -142,10 +141,10 @@
                         </div>
                         <div class="comment_section" id="comment_section_{{post.post_id}}">
                             <div class="line"></div>
-                            <form id="commentform" action="submit_comment" method="post" enctype="multipart/form-data" class="new-comment">
+                            <form id="commentform" action="submit_comment" method="post" enctype="multipart/form-data" class="{{post.post_id}}">
                                 <textarea placeholder="" rows="3" id="commentContent" name="content"></textarea>
                                 <input type="hidden" name="post_id" value="{{post.post_id}}">
-                                <button type="submit" class="{{post.post_id}}" onclick="addcomment(`{{post.post_id}}`)">Comment</button>
+                                <button type="submit" class="{{post.post_id}}" onclick="displaycomment('submit_comment')">Comment</button>
                             </form>
                         </div>
                     </div>
@@ -156,6 +155,7 @@
             </section>
         </section>
     </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
